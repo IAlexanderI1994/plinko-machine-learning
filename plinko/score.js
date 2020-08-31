@@ -1,19 +1,29 @@
 const outputs = []
 
-const PREDICTION_POINT = 300
 const K = 3
 
 function onScoreUpdate(dropPosition, bounciness, size, bucketLabel) {
   outputs.push([ ...arguments ])
 }
 
-function distance(value) {
-  return Math.abs(value - PREDICTION_POINT)
+function distance(pointA, pointB) {
+  return Math.abs(pointA - pointB)
 }
 
 function runAnalysis() {
-  const bucket = _.chain(outputs)
-    .map(([ position, , , bucket ]) => ([ distance(position), bucket ]))
+  const [ testSet, trainingSet ] = splitDataset(outputs, 10)
+
+
+  testSet.forEach((testItem) => {
+    const bucket = knn(trainingSet, testItem[ 0 ])
+    console.log(bucket, testItem[ 3 ])
+  })
+
+}
+
+function knn(data, point) {
+  return _.chain(data)
+    .map(([ position, , , bucket ]) => ([ distance(position, point), bucket ]))
     .sortBy(([ distance ]) => distance)
     .slice(0, K)
     .countBy(([ , bucket ]) => bucket)
@@ -25,8 +35,14 @@ function runAnalysis() {
     .first()
     .parseInt()
     .value()
-
-  console.log('probably fall to ', bucket)
-
 }
 
+function splitDataset(data, testCount) {
+  const shuffled = _.shuffle(data)
+  const testSet = _.slice(shuffled, 0, testCount)
+  const trainingSet = _.slice(shuffled, testCount)
+
+  return [ testSet, trainingSet ]
+
+
+}
