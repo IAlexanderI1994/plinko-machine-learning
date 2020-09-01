@@ -11,13 +11,18 @@ function distance(pointA, pointB) {
 }
 
 function runAnalysis() {
-  const [ testSet, trainingSet ] = splitDataset(outputs, 10)
+  const TEST_SET_SIZE = 10
+  const [ testSet, trainingSet ] = splitDataset(outputs, TEST_SET_SIZE)
 
 
-  testSet.forEach((testItem) => {
-    const bucket = knn(trainingSet, testItem[ 0 ])
-    console.log(bucket, testItem[ 3 ])
-  })
+  const accuracy = _.chain(testSet)
+    .filter(testPoint => knn(trainingSet, testPoint[ 0 ]) === testPoint[3])
+    .size()
+    .divide(TEST_SET_SIZE)
+    .value()
+  console.log('Accuracy: ', accuracy * 100, '%')
+
+
 
 }
 
