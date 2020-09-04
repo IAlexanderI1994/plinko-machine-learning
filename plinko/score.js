@@ -6,7 +6,12 @@ function onScoreUpdate(dropPosition, bounciness, size, bucketLabel) {
 }
 
 function distance(pointA, pointB) {
-  return Math.abs(pointA - pointB)
+
+  return _.chain(pointA)
+    .zip(pointB)
+    .map(([ a, b ]) => (a - b) ** 2)
+    .sum()
+    .value() ** 0.5
 }
 
 function runAnalysis() {
@@ -16,14 +21,13 @@ function runAnalysis() {
 
   _.range(1, 20).forEach(k => {
     const accuracy = _.chain(testSet)
-      .filter(testPoint => knn(trainingSet, testPoint[ 0 ],k) === testPoint[3])
+      .filter(testPoint => knn(trainingSet, testPoint[ 0 ], k) === testPoint[ 3 ])
       .size()
       .divide(TEST_SET_SIZE)
       .value()
     console.log(`For k of ${k} Accuracy: `, accuracy * 100, '%')
 
   })
-
 
 
 }
