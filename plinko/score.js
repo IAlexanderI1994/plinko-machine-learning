@@ -21,7 +21,7 @@ function runAnalysis() {
 
   _.range(1, 20).forEach(k => {
     const accuracy = _.chain(testSet)
-      .filter(testPoint => knn(trainingSet, testPoint[ 0 ], k) === testPoint[ 3 ])
+      .filter(testPoint => knn(trainingSet, _.initial(testPoint), k) === testPoint[ 3 ])
       .size()
       .divide(TEST_SET_SIZE)
       .value()
@@ -32,9 +32,23 @@ function runAnalysis() {
 
 }
 
+/**
+ *
+ * @param data
+ * @param point
+ * @param k
+ * @returns {*}
+ */
 function knn(data, point, k) {
   return _.chain(data)
-    .map(([ position, , , bucket ]) => ([ distance(position, point), bucket ]))
+    .map(row => {
+      return [
+        // multidimensional distance between all characteristics (using initial for remove bucket from characteristics set )
+        distance(_.initial(row), point),
+        // last element - is always bucket
+        _.last(row)
+      ]
+    })
     .sortBy(([ distance ]) => distance)
     .slice(0, k)
     .countBy(([ , bucket ]) => bucket)
@@ -56,4 +70,24 @@ function splitDataset(data, testCount) {
   return [ testSet, trainingSet ]
 
 
+}
+
+
+/**
+ *
+ * @param data
+ * @param columnsCountToNormalize - columns count  that needs normalization ( for ex, we dont want to normalize bucket )
+ *
+ */
+function minMax(data, columnsCountToNormalize) {
+  const clonedData = _.cloneDeep(data)
+  for ( let i = 0; i < columnsCountToNormalize; i++ ) {
+    const column = clonedData.map(row => row[ i ])
+    const min = _.min(column)
+    const max = _.max(column)
+    for ( let j = 0; j < clonedData.length; j++ ) {
+      clonedData[ j ][ i ] = (clonedData[ j ][ i ] - min) / (max - min)
+    }
+  }
+  return clonedData
 }
