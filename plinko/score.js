@@ -1,4 +1,5 @@
 const outputs = []
+const TEST_SET_SIZE = 100
 
 
 function onScoreUpdate(dropPosition, bounciness, size, bucketLabel) {
@@ -15,10 +16,27 @@ function distance(pointA, pointB) {
 }
 
 function runAnalysis() {
-  const TEST_SET_SIZE = 100
-  const [ testSet, trainingSet ] = splitDataset(outputs, TEST_SET_SIZE)
+  const k = 10
 
 
+  _.range(0, 3).forEach(feature => {
+    // here we want map outputs to only 1 characteristic(column) joined with result bucket number
+    const data = _.map(outputs, row => [ row[ feature ], _.last(row) ])
+    const [ testSet, trainingSet ] = splitDataset(minMax(data, 1), TEST_SET_SIZE)
+
+    const accuracy = _.chain(testSet)
+      .filter(testPoint => knn(trainingSet, _.initial(testPoint), k) === _.last(testPoint))
+      .size()
+      .divide(TEST_SET_SIZE)
+      .value()
+    console.log(`For feature of ${feature} Accuracy: `, accuracy * 100, '%')
+
+  })
+
+
+}
+
+function findOptimalK(testSet, trainingSet) {
   _.range(1, 20).forEach(k => {
     const accuracy = _.chain(testSet)
       .filter(testPoint => knn(trainingSet, _.initial(testPoint), k) === testPoint[ 3 ])
@@ -28,8 +46,6 @@ function runAnalysis() {
     console.log(`For k of ${k} Accuracy: `, accuracy * 100, '%')
 
   })
-
-
 }
 
 /**
